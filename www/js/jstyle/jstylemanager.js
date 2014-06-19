@@ -7,5 +7,11 @@
     };
 
     //init bluetooth 
-    bluetoothle.initialize(self.dummy, self.dummy, bluetoothleName, 'initialize', '');
+    bluetoothle.startScan(function (data) {
+        console.log(data);
+        bluetoothle.connect(function (result) {
+            console.log(result);
+            bluetoothle.stopScan(self.dummy, self.dummy);
+        }, self.dummy, {});
+    }, self.dummy, JSON.stringify({ serviceUuids: [self.commands.serviceId] }));
 }
