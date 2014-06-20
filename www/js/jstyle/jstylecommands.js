@@ -13,9 +13,9 @@
         command[1] = self.toBCD(dateTime.getFullYear() - 2000);
         command[2] = self.toBCD(dateTime.getMonth());
         command[3] = self.toBCD(dateTime.getDay());
-        command[4] = self.toBCD(dateTime.getHour());
-        command[5] = self.toBCD(dateTime.getMinute());
-        command[6] = self.toBCD(dateTime.getSecond());
+        command[4] = self.toBCD(dateTime.getHours());
+        command[5] = self.toBCD(dateTime.getMinutes());
+        command[6] = self.toBCD(dateTime.getSeconds());
 
         command[15] = self.CRC(command);
 

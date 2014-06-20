@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace CordovaBLE.Plugin
 {
-    public class PluginStartScanOptions
+    public class PluginCharacteristicRWStatus : PluginCharacteristicRWOptions
     {
-        public string[] serviceUuids { get; set; }        
+        public string status { get; set; }
     }
 }

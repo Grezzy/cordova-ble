@@ -171,6 +171,10 @@
     <Compile Include="Plugin\GattCharacteristicInfo.cs" />
     <Compile Include="Plugin\GattDeviceInfo.cs" />
     <Compile Include="Plugin\GattServiceInfo.cs" />
+    <Compile Include="Plugin\PluginCharacteristicRWOptions.cs" />
+    <Compile Include="Plugin\PluginCharacteristicRWStatus.cs" />
+    <Compile Include="Plugin\PluginCharacteristicsOptions.cs" />
+    <Compile Include="Plugin\PluginCharacteristicsStatus.cs" />
     <Compile Include="Plugin\PluginConnectOptions.cs" />
     <Compile Include="Plugin\PluginConnectStatus.cs" />
     <Compile Include="Plugin\PluginServiceStatus.cs" />

@@ -58,7 +58,7 @@ namespace Cordova.Extension.Commands
         public void stopScan(string options)
         {
             devices = null;
-            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new { status = "scanStopped" }));
+            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginStartScanStatus { status = "scanStopped" }));
         }
 
         public void connect(string options)
@@ -68,7 +68,7 @@ namespace Cordova.Extension.Commands
                 PluginConnectOptions opt = Parse<PluginConnectOptions>(options);
                 if (opt == null || String.IsNullOrEmpty(opt.address))
                 {
-                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new { error = "connect", message = "Invalid device address" }));
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "connect", message = "Invalid device address" }));
                     return;
                 }
 
@@ -142,11 +142,11 @@ namespace Cordova.Extension.Commands
             }
             catch (Exception ex)
             {
-                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new { error = "close", message = ex.Message }));
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "close", message = ex.Message }));
             }
         }
 
-        public void service(string options)
+        public void services(string options)
         {
             try
             {
@@ -174,9 +174,96 @@ namespace Cordova.Extension.Commands
             }
             catch (Exception ex)
             {
-                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new { error = "close", message = ex.Message }));
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "service", message = ex.Message }));
             }
         }
+
+        public void characteristics(string options)
+        {
+            try
+            {
+                PluginCharacteristicsOptions opts = Parse<PluginCharacteristicsOptions>(options);
+
+                List<Guid> ids = new List<Guid>();
+                if (opts != null && opts.characteristicUuids != null)
+                {
+                    foreach (string s in opts.characteristicUuids)
+                    {
+                        ids.Add(new Guid(s));
+                    }
+                }
+
+                //TODO: Find out why GetAllCharacteristics doesn't work
+                List<Guid> charas = new List<Guid>();
+                GattDeviceService service = device.GetGattService(new Guid(opts.serviceUuid));
+                foreach (Guid id in ids)
+                {
+                    if (service.GetCharacteristics(id).Count > 0)
+                    {
+                        charas.Add(id);
+                    }
+                }
+
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicsStatus { status = "discoverCharacteristics", serviceUuid = opts.serviceUuid, characteristicUuids = charas.Select(c => c.ToString()).ToArray() }));
+            }
+            catch (Exception ex)
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "characteristics", message = ex.Message }));
+            }
+        }
+        
+        public void descriptors(string options)
+        {
+            //TODO: implement descriptors enumeration
+            DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "descriptors", message = "Not implemented" }));
+        }
+
+        public void read(string options)
+        {
+            try
+            {
+                PluginCharacteristicRWOptions opts = Parse<PluginCharacteristicRWOptions>(options);
+
+                var service = device.GetGattService(new Guid(opts.serviceUuid));
+                var chara = service.GetCharacteristics(new Guid(opts.characteristicUuid)).First();
+                var value = chara.ReadValueAsync().AsTask().GetAwaiter().GetResult();
+                if(value.Status != GattCommunicationStatus.Success)
+                {
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "read", message = "Communication error" }));
+                    return;
+                }
+
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicRWStatus { status = "read", serviceUuid = opts.serviceUuid, characteristicUuid = opts.characteristicUuid, value = Convert.ToBase64String(value.Value.ToArray())}));
+            }
+            catch (Exception ex)
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "read", message = ex.Message }));
+            }
+        }
+
+        public void write(string options)
+        {
+            try
+            {
+                PluginCharacteristicRWOptions opts = Parse<PluginCharacteristicRWOptions>(options);
+
+                var service = device.GetGattService(new Guid(opts.serviceUuid));
+                var chara = service.GetCharacteristics(new Guid(opts.characteristicUuid)).First();
+                var status = chara.WriteValueAsync(Convert.FromBase64String(opts.value).AsBuffer()).AsTask().GetAwaiter().GetResult();
+                if (status != GattCommunicationStatus.Success)
+                {
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "write", message = "Communication error" }));
+                    return;
+                }
+
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicRWStatus { status = "write", serviceUuid = opts.serviceUuid, characteristicUuid = opts.characteristicUuid, value = opts.value }));
+            }
+            catch (Exception ex)
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "write", message = ex.Message }));
+            }
+        }
+
         private JObject Parse(string options)
         {
             string opt = JsonHelper.Deserialize<string[]>(options)[0];
@@ -189,26 +276,6 @@ namespace Cordova.Extension.Commands
             return !String.IsNullOrEmpty(opt) ? JsonConvert.DeserializeObject<T>(opt) : default(T);
         }
 
-        private const String keyStatus = "status";
-        private const String keyError = "error";
-        private const String keyMessage = "message";
-        private const String keyRequest = "request";
-        private const String keyName = "name";
-        private const String keyAddress = "address";
-        private const String keyRssi = "rssi";
-        private const String keyAdvertisement = "advertisement";
-        private const String keyServiceUuids = "serviceUuids";
-        private const String keyServiceUuid = "serviceUuid";
-        private const String keyCharacteristicUuid = "characteristicUuid";
-        private const String keyDescriptorUuid = "descriptorUuid";
-        private const String keyServices = "services";
-        private const String keyCharacteristics = "characteristics";
-        private const String keyDescriptors = "descriptors";
-        private const String keyValue = "value";
-        private const String keyIsInitialized = "isInitalized";
-        private const String keyIsScanning = "isScanning";
-        private const String keyIsConnected = "isConnected";
-        private const String keyIsDiscovered = "isDiscovered";
-        private const String keyIsNotification = "isNotification";
+        
     }
 }
