@@ -22,6 +22,20 @@
         return command;
     }
 
+    self.setDateTimeResult = function (arr) {
+        return arr[0] == 0x81 ? false : true;
+    }
+
+    self.getDateTime = function () {
+
+        var command = self.getEmptyCommand();
+
+        command[0] = 0x41;
+        command[15] = self.CRC(command);
+
+        return command;
+    }
+
     self.getEmptyCommand = function () {
         var a = new Array(16);
         for (var i = 0; i < a.length; i++) {

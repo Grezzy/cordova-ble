@@ -22,6 +22,11 @@ namespace Cordova.Extension.Commands
         private bool isInitialized = false;
         private DeviceInformationCollection devices;
         private BluetoothLEDevice device;
+
+        public BluetoothLePlugin() : base() 
+        { 
+        }
+
         public void initialize(string options)
         {
             //TODO: Check if bluetooth enabled
@@ -72,12 +77,12 @@ namespace Cordova.Extension.Commands
                     return;
                 }
 
-                device = BluetoothLEDevice.FromIdAsync(opt.address).AsTask().GetAwaiter().GetResult();                                
+                device = BluetoothLEDevice.FromIdAsync(opt.address).AsTask().GetAwaiter().GetResult();
                 DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginConnectStatus { status = device.ConnectionStatus.ToString().ToLower(), address = device.DeviceId, name = device.Name }));
             }
             catch (Exception ex)
             {
-                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "connect", message = ex.Message }));                         
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "connect", message = ex.Message }));
             }
         }
 
@@ -85,7 +90,7 @@ namespace Cordova.Extension.Commands
         {
             try
             {
-                if(device.ConnectionStatus != BluetoothConnectionStatus.Connected)
+                if (device.ConnectionStatus != BluetoothConnectionStatus.Connected)
                 {
                     // TODO: connect
                 }
@@ -134,7 +139,7 @@ namespace Cordova.Extension.Commands
                 {
                     if (dvc.services.Any(s => s.serviceUuid == service.Uuid)) continue;
 
-                    GattServiceInfo bleService = new GattServiceInfo(service);                    
+                    GattServiceInfo bleService = new GattServiceInfo(service);
                     dvc.services.Add(bleService);
                 }
 
@@ -153,18 +158,18 @@ namespace Cordova.Extension.Commands
                 PluginStartScanOptions opts = Parse<PluginStartScanOptions>(options);
 
                 List<Guid> ids = new List<Guid>();
-                if(opts != null && opts.serviceUuids != null)
+                if (opts != null && opts.serviceUuids != null)
                 {
-                    foreach(string s in opts.serviceUuids)
+                    foreach (string s in opts.serviceUuids)
                     {
                         ids.Add(new Guid(s));
                     }
                 }
 
                 List<GattServiceInfo> services = new List<GattServiceInfo>();
-                foreach(GattDeviceService srv in device.GattServices)
+                foreach (GattDeviceService srv in device.GattServices)
                 {
-                    if(ids.Contains(srv.Uuid))
+                    if (ids.Contains(srv.Uuid))
                     {
                         services.Add(new GattServiceInfo(srv));
                     }
@@ -211,7 +216,7 @@ namespace Cordova.Extension.Commands
                 DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "characteristics", message = ex.Message }));
             }
         }
-        
+
         public void descriptors(string options)
         {
             //TODO: implement descriptors enumeration
@@ -227,13 +232,13 @@ namespace Cordova.Extension.Commands
                 var service = device.GetGattService(new Guid(opts.serviceUuid));
                 var chara = service.GetCharacteristics(new Guid(opts.characteristicUuid)).First();
                 var value = chara.ReadValueAsync().AsTask().GetAwaiter().GetResult();
-                if(value.Status != GattCommunicationStatus.Success)
+                if (value.Status != GattCommunicationStatus.Success)
                 {
                     DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "read", message = "Communication error" }));
                     return;
                 }
 
-                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicRWStatus { status = "read", serviceUuid = opts.serviceUuid, characteristicUuid = opts.characteristicUuid, value = Convert.ToBase64String(value.Value.ToArray())}));
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicRWStatus { status = "read", serviceUuid = opts.serviceUuid, characteristicUuid = opts.characteristicUuid, value = Convert.ToBase64String(value.Value.ToArray()) }));
             }
             catch (Exception ex)
             {
@@ -264,6 +269,36 @@ namespace Cordova.Extension.Commands
             }
         }
 
+        public void subscribe(string options)
+        {
+            try
+            {
+                PluginCharacteristicRWOptions opts = Parse<PluginCharacteristicRWOptions>(options);
+
+                var service = device.GetGattService(new Guid(opts.serviceUuid));
+                var chara = service.GetCharacteristics(new Guid(opts.characteristicUuid)).First();
+                if (chara.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                {
+                    GattCharacteristicValueChanged vc = new GattCharacteristicValueChanged{ callbackId = this.CurrentCommandCallbackId, characteristicUuid = opts.characteristicUuid, serviceUuid = opts.serviceUuid };
+                    chara.ValueChanged += vc.ValueChanged;
+                    vc.Changed += vc_Changed;
+                }
+
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicRWStatus { status = "subscribed", serviceUuid = opts.serviceUuid, characteristicUuid = opts.characteristicUuid }) { KeepCallback = true });
+            }
+            catch (Exception ex)
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, new ErrorStatus { error = "subscribe", message = ex.Message }));
+            }
+        }
+
+        void vc_Changed(object sender, string e)
+        {
+            var vc = (GattCharacteristicValueChanged)sender;
+            this.DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginCharacteristicRWStatus { status = "subscribedResult", serviceUuid = vc.serviceUuid, characteristicUuid = vc.characteristicUuid, value = e }) { KeepCallback = true }, vc.callbackId);
+        }
+
+
         private JObject Parse(string options)
         {
             string opt = JsonHelper.Deserialize<string[]>(options)[0];
@@ -276,6 +311,6 @@ namespace Cordova.Extension.Commands
             return !String.IsNullOrEmpty(opt) ? JsonConvert.DeserializeObject<T>(opt) : default(T);
         }
 
-        
+
     }
 }

@@ -35,7 +35,14 @@ var app = {
     onDeviceReady: function() {
         app.receivedEvent('deviceready');
         //cordova.exec(function (success) { console.log(success); }, function (error) { console.log(error); }, "BluetoothLePlugin", "initialize", "test");
-        var manager = new JStyleManager();        
+        var manager = new JStyleManager();
+        manager.start();
+        manager.connect(function () {
+            console.log('i:Connected...');
+            manager.setDateTime(new Date(), function (r) {                
+                console.log('i:SetDateTime: ' + JSON.stringify(r));
+            });
+        });
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {

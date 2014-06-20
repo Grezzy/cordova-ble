@@ -297,6 +297,8 @@ var cordova = {
             // Clear callback if not expecting any more results
             if (!keepCallback) {
                 delete cordova.callbacks[callbackId];
+            } else {
+                //console.log('Kept callback:' + callbackId);
             }
         }
     },
