@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest"
+	id="com.firerunner.cordova.ble"
+	version="0.0.1">
+
+  <!-- This plugin requires Cordova version 3.5.0 or newer. -->
+  <engines>
+    <engine name="cordova" version=">=3.5.0" />
+  </engines>
+
+  <name>Grezzy BLE (Bluetooth Low Energy)</name>
+  <description>This plugin allows your app to communicate to Bluetooth Low Energy devices.</description>
+  <author>Grezzy Inc.</author>
+  <keywords>bluetooth,low energy</keywords>
+  <license>Apache 2.0</license>
+
+  <js-module src="www/ble.js" name="BLE">
+    <clobbers target="window.ble" />
+  </js-module>
+
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="BLE" >
+        <param name="android-package" value="com.evothings.BLE"/>
+      </feature>
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.BLUETOOTH" />
+      <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    </config-file>
+
+    <source-file src="src/android/BLE.java" target-dir="src/com/evothings" />
+  </platform>
+
+  <platform name="ios">
+    <config-file target="config.xml" parent="/*">
+      <feature name="BLE">
+        <param name="ios-package" value="EVOBLE"/>
+      </feature>
+    </config-file>
+
+    <framework src="CoreBluetooth.framework" />
+
+    <header-file src="src/ios/EVOBLE.h" />
+    <source-file src="src/ios/EVOBLE.m" />
+  </platform>
+
+  <platform name="wp8">
+    <source-file src="src/wp8/BluetoothLeClasses.cs" />
+    <source-file src="src/wp8/BluetoothLePlugin.cs" />
+    <config-file target="config.xml" parent="/*">
+      <feature name="BLE">
+        <param name="wp-package" value="BluetoothLePlugin"/>
+      </feature>
+    </config-file>
+    <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
+      <Capability Name="ID_CAP_LOCATION" />
+    </config-file>
+    <config-file target="Package.appxmanifest" parent="/Package/Capabilities">
+      <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
+        <m2:Device Id="any">
+          <m2:Function Type="serviceId:0000fff0-0000-1000-8000-00805f9b34fb" />
+          <m2:Function Type="name:runningSpeedAndCadence" />
+        </m2:Device>
+      </m2:DeviceCapability>
+    </config-file>
+  </platform>
+
+</plugin>

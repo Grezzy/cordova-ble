@@ -165,22 +165,8 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Plugin\BluetoothLeClasses.cs" />
     <Compile Include="Plugin\BluetoothLePlugin.cs" />
-    <Compile Include="Plugin\ErrorStatus.cs" />
-    <Compile Include="Plugin\GattCharacteristicDescriptorInfo.cs" />
-    <Compile Include="Plugin\GattCharacteristicInfo.cs" />
-    <Compile Include="Plugin\GattCharacteristicValueChanged.cs" />
-    <Compile Include="Plugin\GattDeviceInfo.cs" />
-    <Compile Include="Plugin\GattServiceInfo.cs" />
-    <Compile Include="Plugin\PluginCharacteristicRWOptions.cs" />
-    <Compile Include="Plugin\PluginCharacteristicRWStatus.cs" />
-    <Compile Include="Plugin\PluginCharacteristicsOptions.cs" />
-    <Compile Include="Plugin\PluginCharacteristicsStatus.cs" />
-    <Compile Include="Plugin\PluginConnectOptions.cs" />
-    <Compile Include="Plugin\PluginConnectStatus.cs" />
-    <Compile Include="Plugin\PluginServiceStatus.cs" />
-    <Compile Include="Plugin\PluginStartScanOptions.cs" />
-    <Compile Include="Plugin\PluginStartScanStatus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
