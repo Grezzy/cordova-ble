@@ -8,23 +8,24 @@ using Windows.Devices.Enumeration;
 using WPCordovaClassLib.Cordova;
 using WPCordovaClassLib.Cordova.Commands;
 using WPCordovaClassLib.Cordova.JSON;
-using CordovaBLE.Plugin;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Diagnostics;
 
 
 namespace Cordova.Extension.Commands
 {
-    public class BluetoothLePlugin : BaseCommand
+    public class BLE : BaseCommand
     {
         private bool isInitialized = false;
         private DeviceInformationCollection devices;
         private BluetoothLEDevice device;
 
-        public BluetoothLePlugin() : base() 
-        { 
+        public BLE()
+            : base()
+        {
         }
 
         public void initialize(string options)
@@ -36,28 +37,42 @@ namespace Cordova.Extension.Commands
             DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new { status = "initialized" }));
         }
 
-        public void startScan(string options)
+        public async void startScan(string options)
         {
-            PluginStartScanOptions opt = Parse<PluginStartScanOptions>(options);
-            if (opt != null && opt.serviceUuids != null && opt.serviceUuids.Length > 0)
-            {
-                devices = DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(new Guid(opt.serviceUuids[0]))).AsTask().GetAwaiter().GetResult();
-            }
-            else
-            {
-                devices = DeviceInformation.FindAllAsync(BluetoothLEDevice.GetDeviceSelector()).AsTask().GetAwaiter().GetResult();
-            }
+            PluginResult result = new PluginResult(PluginResult.Status.OK);
+            result.KeepCallback = true;
+            string callbackId = result.CallbackId;
 
-            if (devices.Count == 0)
+            try
             {
-                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new { status = "scanStarted" }));
-            }
-            else
-            {
-                var d = devices.First();
-                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginStartScanStatus { status = "scanResult", address = d.Id, name = d.Name, rssi = "" }));
-            }
+                PluginStartScanOptions opt = Parse<PluginStartScanOptions>(options);
+                if (opt != null && opt.serviceUuids != null && opt.serviceUuids.Length > 0)
+                {
+                    devices = await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(new Guid(opt.serviceUuids[0])));
+                }
+                else
+                {
+                    devices = await DeviceInformation.FindAllAsync(BluetoothLEDevice.GetDeviceSelector());
+                }
 
+                if (devices.Count == 0)
+                {
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new { status = "scanStarted" }));
+                }
+                else
+                {
+                    var d = opt != null && !string.IsNullOrEmpty(opt.name) ? devices.FirstOrDefault(x => x.Name == opt.name) : devices.First();
+                    if (d != null)
+                        DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new PluginStartScanStatus { status = "scanResult", address = d.Id, name = d.Name, rssi = "" }));
+                    else
+                        DispatchCommandResult(new PluginResult(PluginResult.Status.OK, new { status = "scanStarted" }));
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginResult errorResult = new PluginResult(PluginResult.Status.ERROR, new { error = "startScan", message = ex.Message });
+                DispatchCommandResult(errorResult, callbackId);
+            }
         }
 
         public void stopScan(string options)
@@ -279,7 +294,7 @@ namespace Cordova.Extension.Commands
                 var chara = service.GetCharacteristics(new Guid(opts.characteristicUuid)).First();
                 if (chara.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                 {
-                    GattCharacteristicValueChanged vc = new GattCharacteristicValueChanged{ callbackId = this.CurrentCommandCallbackId, characteristicUuid = opts.characteristicUuid, serviceUuid = opts.serviceUuid };
+                    GattCharacteristicValueChanged vc = new GattCharacteristicValueChanged { callbackId = this.CurrentCommandCallbackId, characteristicUuid = opts.characteristicUuid, serviceUuid = opts.serviceUuid };
                     chara.ValueChanged += vc.ValueChanged;
                     vc.Changed += vc_Changed;
                 }
@@ -307,8 +322,16 @@ namespace Cordova.Extension.Commands
 
         private T Parse<T>(string options)
         {
-            string opt = JsonHelper.Deserialize<string[]>(options)[0];
-            return !String.IsNullOrEmpty(opt) ? JsonConvert.DeserializeObject<T>(opt) : default(T);
+            try
+            {
+                string opt = JsonHelper.Deserialize<string[]>(options)[0];
+                return !String.IsNullOrEmpty(opt) ? JsonConvert.DeserializeObject<T>(opt) : default(T);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error parsing arguments: " + ex.Message);
+                return default(T);
+            }
         }
 
 

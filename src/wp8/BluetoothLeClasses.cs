@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
+using System.Runtime.InteropServices.WindowsRuntime;
 
-namespace CordovaBLE.Plugin
+namespace Cordova.Extension.Commands
 {
     public class ErrorStatus
     {
@@ -125,6 +127,7 @@ namespace CordovaBLE.Plugin
     public class PluginStartScanOptions
     {
         public string[] serviceUuids { get; set; }
+        public string name { get; set; }
     }
 
     public class PluginStartScanStatus
@@ -133,5 +136,17 @@ namespace CordovaBLE.Plugin
         public string address { get; set; }
         public string name { get; set; }
         public string rssi { get; set; }
+    }
+
+    public class GattDeviceInfo
+    {
+        public string address { get; set; }
+        public string name { get; set; }
+        public List<GattServiceInfo> services { get; set; }
+
+        public GattDeviceInfo()
+        {
+            services = new List<GattServiceInfo>();
+        }
     }
 }
