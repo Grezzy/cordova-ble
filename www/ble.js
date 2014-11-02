@@ -49,6 +49,15 @@ cordova.define("com.firerunner.cordova.ble.BLE", function (require, exports, mod
     exports.characteristics = function (successCallback, errorCallback, params) {
         cordova.exec(successCallback, errorCallback, "BLE", "characteristics", [params]);
     };
+    exports.isInitialized = function (successCallback, errorCallback, params) {
+               cordova.exec(successCallback, errorCallback, "BLE", "isInitialized", [params]);
+               };
+               exports.disconnect = function (successCallback, errorCallback, params) {
+               cordova.exec(successCallback, errorCallback, "BLE", "disconnect", [params]);
+               };
+               exports.close = function (successCallback, errorCallback, params) {
+               cordova.exec(successCallback, errorCallback, "BLE", "close", [params]);
+               };
     exports.encodedStringToBytes = function (string) {
         var data = atob(string);
         var bytes = new Uint8Array(data.length);
