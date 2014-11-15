@@ -31,10 +31,10 @@ cordova.define("com.firerunner.cordova.ble.BLE", function (require, exports, mod
         cordova.exec(successCallback, errorCallback, "BLE", "reconnect", [params]);
     };
     exports.isConnected = function (successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "BLE", "isConnected");
+        cordova.exec(successCallback, errorCallback, "BLE", "isConnected", []);
     };
     exports.wasNeverConnected = function (successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "BLE", "wasNeverConnected");
+        cordova.exec(successCallback, errorCallback, "BLE", "wasNeverConnected", []);
     };
     exports.subscribe = function (successCallback, errorCallback, params) {
         cordova.exec(successCallback, errorCallback, "BLE", "subscribe", [params]);
