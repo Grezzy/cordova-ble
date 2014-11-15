@@ -21,7 +21,12 @@ cordova.define("com.firerunner.cordova.ble.BLE", function (require, exports, mod
     exports.connect = function (successCallback, errorCallback, params) {
         cordova.exec(successCallback, errorCallback, "BLE", "connect", [params]);
     };
-
+    exports.disconnect = function (successCallback, errorCallback, params) {
+        cordova.exec(successCallback, errorCallback, "BLE", "disconnect", [params]);
+    };
+    exports.close = function (successCallback, errorCallback, params) {
+        cordova.exec(successCallback, errorCallback, "BLE", "close", [params]);
+    };
     exports.reconnect = function (successCallback, errorCallback, params) {
         cordova.exec(successCallback, errorCallback, "BLE", "reconnect", [params]);
     };
@@ -76,7 +81,7 @@ cordova.define("com.firerunner.cordova.ble.BLE", function (require, exports, mod
     };
 
     // Windows Runtime only code
-    if (WinJS && WinJS.Namespace) {
+    if (typeof(WinJS) != 'undefined' && WinJS.Namespace) {
 
         var WinBLE = function () {
             var gatt = Windows.Devices.Bluetooth.GenericAttributeProfile;
